@@ -1,6 +1,6 @@
 # AlphaBot2
 
-Must by run as root user..
+Must be run as root user..
 
 ros2 launch src/alphabot2/launch/alphabot2.py
 
