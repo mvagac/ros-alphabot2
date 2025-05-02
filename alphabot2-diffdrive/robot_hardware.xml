@@ -1,0 +1,10 @@
+<library path="alphabot2_diffdrive">
+  <class name="alphabot2_diffdrive/DiffDriveAlphabot2"
+         type="ros2_control_alphabot2::DiffDriveAlphabot2"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Hardware Interface for Differential Drive Pokus controller.
+    </description>
+  </class>
+</library>
+
