@@ -1,0 +1,39 @@
+<?xml version="1.0" ?>
+<sdf version="1.8">
+
+    <model name="stena" canonical_link='link'>
+        <static>true</static>
+        <link name="link">
+            <collision name="collision">
+                <geometry>
+                    <box>
+                        <size>1.0 0.01 0.5</size>
+                    </box>
+                </geometry>
+            </collision>
+            <visual name="visual">
+                <geometry>
+                    <box>
+                        <size>1.0 0.01 0.5</size>
+                    </box>
+                </geometry>
+                <material>
+                    <ambient>1 1 1 1</ambient>
+                    <diffuse>1 1 1 1</diffuse>
+                    <specular>0 0 0 1</specular>
+		    <emissive>0 0 0 1</emissive>
+		    <!--
+                    <pbr>
+                        <metal>
+                            <albedo_map>file://resource/coke.jpg</albedo_map>
+                            <roughness>0.0</roughness>
+                            <metalness>0.0</metalness>
+                        </metal>
+                    </pbr>
+                    -->
+                </material>
+            </visual>
+        </link>
+    </model>
+
+</sdf>
