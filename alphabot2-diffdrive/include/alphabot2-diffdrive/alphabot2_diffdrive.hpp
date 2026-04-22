@@ -36,6 +36,10 @@ private:
   std::string lave_koleso_nazov;
   std::string prave_koleso_nazov;
 
+  int pwm0_duty_fd = -1;
+  int pwm1_duty_fd = -1;
+  const long PERIOD_NS = 1000000;		// 50Hz = 20,000,000ns
+
   int hw_init();
   void hw_release();
   void hw_write(char dir, int pwm, std::stringstream &ss);

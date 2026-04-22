@@ -1,29 +1,26 @@
 #include "alphabot2-diffdrive/alphabot2_diffdrive.hpp"
 
+#include <fstream>
+#include <unistd.h>
+#include <fcntl.h>
+
 
 #define CHIPNAME "gpiochip0"
 
 // Define GPIO pins (BCM numbering)
 #define AIN1 12
 #define AIN2 13
+
 #define BIN1 20
 #define BIN2 21
-#define ENA 6
-#define ENB 26
 
 
-namespace ros2_control_alphabot2	//ros2_control_demo_example_2
+namespace ros2_control_alphabot2	//ros2_control_alphabot2
 {
 
 /* ***** HW ZAVISLE ************************************************************ */
 int DiffDriveAlphabot2::hw_init()
 {
-  if (gpioInitialise() < 0)
-  {
-    std::cerr << "pigpio initialization failed" << std::endl;
-    return 1;
-  }
-
   chip = gpiod_chip_open_by_name(CHIPNAME);
   if (!chip)
   {
@@ -31,6 +28,26 @@ int DiffDriveAlphabot2::hw_init()
     return 1;
   }
 
+  // PWM
+  auto setup_pwm = [this](const std::string& id) -> int {
+      std::string path = "/sys/class/pwm/pwmchip" + id + "/pwm0";
+      
+      if (access(path.c_str(), F_OK) != 0) {				// export if not already present
+          std::ofstream("/sys/class/pwm/pwmchip" + id + "/export") << "0";	// creates pwm0 subfolder
+      }
+      std::ofstream(path + "/enable") << "0";				// disable to allow period changes
+      std::ofstream(path + "/period") << std::to_string(PERIOD_NS);	// set period (>duty_cycle)
+      std::ofstream(path + "/duty_cycle") << "0";			// set initial duty cycle
+      std::ofstream(path + "/enable") << "1";				// enable
+      return open((path + "/duty_cycle").c_str(), O_WRONLY);		// open duty_cycle file (keep open)
+  };
+  pwm0_duty_fd = setup_pwm("0");
+  pwm1_duty_fd = setup_pwm("1");
+
+  if (pwm0_duty_fd < 0 || pwm1_duty_fd < 0)
+    return 1;
+
+  // pins
   ain1 = gpiod_chip_get_line(chip, AIN1);
   ain2 = gpiod_chip_get_line(chip, AIN2);
   bin1 = gpiod_chip_get_line(chip, BIN1);
@@ -45,58 +62,70 @@ int DiffDriveAlphabot2::hw_init()
 
 void DiffDriveAlphabot2::hw_release()
 {
+  // pwm
+  if (pwm0_duty_fd >= 0) {
+    lseek(pwm0_duty_fd, 0, SEEK_SET);
+    dprintf(pwm0_duty_fd, "0");
+    close(pwm0_duty_fd);
+  }
+  if (pwm1_duty_fd >= 0) {
+    lseek(pwm1_duty_fd, 0, SEEK_SET);
+    dprintf(pwm1_duty_fd, "0");
+    close(pwm1_duty_fd);
+  }
+
   gpiod_chip_close(chip);
-  gpioTerminate();
 }
 
 void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
 {
   struct gpiod_line *in1 = NULL;
   struct gpiod_line *in2 = NULL;
-  int en = -1;
+  int fd = -1;
   if (dir == 'L')
   {
     in1 = ain1;
     in2 = ain2;
-    en = ENA;
+    fd = pwm0_duty_fd;
   }
   if (dir == 'P')
   {
     in1 = bin1;
     in2 = bin2;
-    en = ENB;
+    fd = pwm1_duty_fd;
   }
-  if (en == -1)
+  if (fd == -1)
   {
     return;
   }
+
   if (pwm == 0)
   {
     // stoj
     ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t\tstoj " << en << ", " << pwm;
+       << "\t\tstoj " << dir << ", " << pwm;
     gpiod_line_set_value(in1, 0);
     gpiod_line_set_value(in2, 0);
-    gpioSetPWMfrequency(en, 1000);         // 1kHz
-    gpioPWM(en, pwm);
+    lseek(fd, 0, SEEK_SET);
+    dprintf(fd, "%d", pwm);
   } else if (pwm > 0)
   {
     // dopredu
     ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t\tdopredu " << en << ", " << pwm;
+       << "\t\tdopredu " << dir << ", " << pwm;
     gpiod_line_set_value(in1, 0);
     gpiod_line_set_value(in2, 1);
-    gpioSetPWMfrequency(en, 1000);         // 1kHz
-    gpioPWM(en, pwm);
+    lseek(fd, 0, SEEK_SET);
+    dprintf(fd, "%d", pwm);
   } else
   {
     // dozadu
     ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t\tdozadu " << en << ", " << -pwm;
+       << "\t\tdozadu " << dir << ", " << -pwm;
     gpiod_line_set_value(in1, 1);
     gpiod_line_set_value(in2, 0);
-    gpioSetPWMfrequency(en, 1000);         // 1kHz
-    gpioPWM(en, -pwm);
+    lseek(fd, 0, SEEK_SET);
+    dprintf(fd, "%d", -pwm);
   }
 }
 
@@ -186,7 +215,7 @@ hardware_interface::CallbackReturn DiffDriveAlphabot2::on_activate(
     set_command(name, get_state(name));
   }
 
-  hw_init();
+  if (hw_init() != 0) return CallbackReturn::ERROR;
 
   RCLCPP_INFO(get_logger(), "aktivovane");
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -224,7 +253,7 @@ hardware_interface::return_type DiffDriveAlphabot2::read(
       ss << std::endl << "\t velocity " << velo << " for '" << name << "'!";
     }
   }
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+  //RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
@@ -236,6 +265,7 @@ hardware_interface::return_type ros2_control_alphabot2 ::DiffDriveAlphabot2::wri
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   std::stringstream ss;
   ss << "Writing commands:";
+  int do_log = 0;
   for (const auto & [name, descr] : joint_command_interfaces_)
   {
     // Simulate sending commands to the hardware
@@ -244,10 +274,11 @@ hardware_interface::return_type ros2_control_alphabot2 ::DiffDriveAlphabot2::wri
     ss << std::fixed << std::setprecision(2) << std::endl
        << "\t" << "command " << get_command(name) << " for '" << name << "'!";
     double velocity_rad_s = get_command(name);  // from ROS2 controller, in rad/s
+    if (velocity_rad_s != 0) do_log = 1;
 
     // calculate pwm
     double max_velocity_rad_s = max_rychlost_kolesa;
-    int max_pwm = 255;
+    int max_pwm = PERIOD_NS;
     double clamped = std::max(-max_velocity_rad_s, std::min(velocity_rad_s, max_velocity_rad_s));
     double pwm_d = (clamped / max_velocity_rad_s) * max_pwm;
     int pwm = static_cast<int>(std::round(pwm_d));
@@ -260,13 +291,15 @@ hardware_interface::return_type ros2_control_alphabot2 ::DiffDriveAlphabot2::wri
     }
 
   }
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+  if (do_log) {
+    RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+  }
   // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
 }
 
-}  // namespace ros2_control_demo_example_2
+}  // namespace ros2_control_alphabot2
 
 #include "pluginlib/class_list_macros.hpp"
 PLUGINLIB_EXPORT_CLASS(

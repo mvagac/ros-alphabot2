@@ -1,0 +1,27 @@
+/dts-v1/;
+/plugin/;
+
+/ {
+    compatible = "brcm,bcm2835";
+
+    fragment@0 {
+        target-path = "/";
+        __overlay__ {
+
+            pwm_gpio0: pwm_gpio0 {
+                compatible = "pwm-gpio";
+                #pwm-cells = <2>;
+                gpios = <&gpio 6 0>;   /* GPIO6, active high */
+                status = "okay";
+            };
+
+            pwm_gpio1: pwm_gpio1 {
+                compatible = "pwm-gpio";
+                #pwm-cells = <2>;
+                gpios = <&gpio 26 0>;  /* GPIO26, active high */
+                status = "okay";
+            };
+        };
+    };
+};
+
