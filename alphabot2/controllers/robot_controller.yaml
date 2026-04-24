@@ -23,7 +23,7 @@ diff_controller_alphabot2:
 
     position_feedback: false
     open_loop: true
-    enable_odom_tf: true
+    enable_odom_tf: false     # pre lidar + rf2o_laser_odometry to vypneme
 
     linear.x.max_velocity: 0.16
     linear.x.min_velocity: -0.16
