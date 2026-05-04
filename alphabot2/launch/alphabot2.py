@@ -4,7 +4,7 @@ from launch_ros.actions import Node
 import os
 
 def generate_launch_description():
-    test_controller = os.path.join(get_package_share_directory('alphabot2'), 'robot_controller.yaml')
+    controller_config_file = os.path.join(get_package_share_directory('alphabot2'), 'robot_controller.yaml')
 
     robot_state_publisher = Node(
         package="robot_state_publisher",
@@ -14,7 +14,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[test_controller],
+        parameters=[controller_config_file],
         output={
             'stdout': 'screen',
             'stderr': 'screen',

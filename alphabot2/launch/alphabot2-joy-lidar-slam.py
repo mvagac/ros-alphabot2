@@ -8,9 +8,9 @@ from launch_ros.substitutions import FindPackageShare
 import os
 
 def generate_launch_description():
-    test_controller = os.path.join(get_package_share_directory('alphabot2'), 'robot_controller.yaml')
+    controller_config_file = os.path.join(get_package_share_directory('alphabot2'), 'robot_controller.yaml')
     joy_config_file = os.path.join(get_package_share_directory('alphabot2'), 'gamepad.yaml')
-    slam_config_file = os.path.join(get_package_share_directory('alphabot2'), 'mapper_params.yaml')
+    mapper_config_file = os.path.join(get_package_share_directory('alphabot2'), 'mapper_params.yaml')
 
     robot_state_publisher = Node(
         package="robot_state_publisher",
@@ -20,7 +20,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[test_controller],
+        parameters=[controller_config_file],
         output={
             'stdout': 'screen',
             'stderr': 'screen',
@@ -107,11 +107,11 @@ def generate_launch_description():
         remappings=[('/cmd_vel', '/diff_controller_alphabot2/cmd_vel')]
     )
 
-    slam = IncludeLaunchDescription(
+    mapper = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             PathJoinSubstitution([FindPackageShare('slam_toolbox'), 'launch', 'online_async_launch.py'])
         ),
-        launch_arguments={ 'slam_params_file': slam_config_file }.items()
+        launch_arguments={ 'slam_params_file': mapper_config_file }.items()
     )
 
     return LaunchDescription([
@@ -130,10 +130,10 @@ def generate_launch_description():
         lidar_tf,
 
         rf2o,
-
         # ros2 topic pub --once /base_pose_ground_truth nav_msgs/msg/Odometry "{header: {frame_id: 'odom'}, child_frame_id: 'telo'}"
-        # ros2 run rf2o_laser_odometry rf2o_laser_odometry_node --ros-args -p laser_scan_topic:=/scan -p odom_topic:=/odom -p base_frame_id:=telo -p odom_frame_id:=odom  -p freq:=2.0 --log-level debug
 
-        slam,
+        mapper,
+        # ros2 run nav2_map_server map_saver_cli -f pokus_map
+
     ])
 
