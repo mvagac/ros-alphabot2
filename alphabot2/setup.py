@@ -9,7 +9,7 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml', 'controllers/robot_controller.yaml', 'joystick/gamepad.yaml']),
+        ('share/' + package_name, ['package.xml', 'config/robot_controller.yaml', 'config/gamepad.yaml', 'config/mapper_params_online_async.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
