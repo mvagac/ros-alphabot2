@@ -5,6 +5,7 @@ import os
 
 def generate_launch_description():
     test_controller = os.path.join(get_package_share_directory('alphabot2'), 'robot_controller.yaml')
+    joy_config_file = os.path.join(get_package_share_directory('alphabot2'), 'gamepad.yaml')
 
     robot_state_publisher = Node(
         package="robot_state_publisher",
@@ -86,7 +87,20 @@ def generate_launch_description():
           'freq': 8.0
       }]
     )
-    # ros2 run rf2o_laser_odometry rf2o_laser_odometry_node --ros-args -p laser_scan_topic:=/scan -p odom_topic:=/odom -p base_frame_id:=telo -p odom_frame_id:=odom  -p freq:=2.0 --log-level debug
+
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        parameters=[{'dev': '/dev/input/js0', 'deadzone': 0.1}]
+    )
+    teleop_node = Node(
+        package='teleop_twist_joy',
+        executable='teleop_node',
+        name='teleop_twist_joy_node',
+        parameters=[joy_config_file],
+        remappings=[('/cmd_vel', '/diff_controller_alphabot2/cmd_vel')]
+    )
 
     return LaunchDescription([
         robot_state_publisher,
@@ -94,14 +108,20 @@ def generate_launch_description():
         joint_state_broadcaster,
         diff_controller,
 
-        # LiDAR publisher node
+        # joystick
+        joy_node,
+        teleop_node
+
+
+        # lidar publisher node
         #ldlidarD500,
         sllidarC1,
         lidar_tf,
 
         rf2o,
 
-        #ros2 topic pub --once /base_pose_ground_truth nav_msgs/msg/Odometry "{header: {frame_id: 'odom'}, child_frame_id: 'telo'}"
+        # ros2 topic pub --once /base_pose_ground_truth nav_msgs/msg/Odometry "{header: {frame_id: 'odom'}, child_frame_id: 'telo'}"
+        # ros2 run rf2o_laser_odometry rf2o_laser_odometry_node --ros-args -p laser_scan_topic:=/scan -p odom_topic:=/odom -p base_frame_id:=telo -p odom_frame_id:=odom  -p freq:=2.0 --log-level debug
 
     ])
 

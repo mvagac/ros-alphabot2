@@ -1,0 +1,12 @@
+teleop_twist_joy_node:
+  ros__parameters:
+    publish_stamped_twist: true
+    require_enable_button: false
+    axis_linear:
+      x: 1            # Left stick Up/Down (index to axes of /joy topic)
+    axis_angular:
+      yaw: 0          # Left stick Left/Right (index to axes of /joy topic)
+    scale_linear:
+      x: 2.0          # Max speed in m/s
+    scale_angular:
+      yaw: 35.0        # Max turn speed in rad/s

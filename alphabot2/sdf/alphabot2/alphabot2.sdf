@@ -185,7 +185,7 @@
                 <plugin>alphabot2_diffdrive/DiffDriveAlphabot2</plugin>
                 <param name="lave_koleso_nazov">lave_koleso_zaves</param>
                 <param name="prave_koleso_nazov">prave_koleso_zaves</param>
-                <param name="max_rychlost_kolesa">10.0</param>
+                <param name="max_rychlost_kolesa">40.0</param>
             </hardware>
 
             <joint name="lave_koleso_zaves">

@@ -23,12 +23,12 @@ diff_controller_alphabot2:
 
     position_feedback: false
     open_loop: true
-    enable_odom_tf: false     # disable for lidar + rf2o_laser_odometry configuration
-                              # test: ros2 param get /diff_controller_alphabot2 enable_odom_tf
-                              # (rebuild or symlink is needed!)
+    enable_odom_tf: false     # pre lidar + rf2o_laser_odometry to vypneme
+                              # pri zmene rebuildnut tento balicek!
+                              # kontrola: ros2 param get /diff_controller_alphabot2 enable_odom_tf
 
-    linear.x.max_velocity: 0.16
-    linear.x.min_velocity: -0.16
+    linear.x.max_velocity: 0.83
+    linear.x.min_velocity: -0.83
     linear.x.max_acceleration: .NAN
     linear.x.max_deceleration: .NAN
     linear.x.max_acceleration_reverse: .NAN
@@ -36,8 +36,8 @@ diff_controller_alphabot2:
     linear.x.max_jerk: .NAN
     linear.x.min_jerk: .NAN
 
-    angular.z.max_velocity: 2.09
-    angular.z.min_velocity: -2.09
+    angular.z.max_velocity: 15.0
+    angular.z.min_velocity: -15.0
     angular.z.max_acceleration: .NAN
     angular.z.max_deceleration: .NAN
     angular.z.max_acceleration_reverse: .NAN
