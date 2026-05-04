@@ -31,6 +31,7 @@ def generate_launch_description():
             executable="spawner",
             arguments=["diff_controller_alphabot2"],
         )
+        # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/diff_controller_alphabot2/cmd_vel
 
     ])
 
