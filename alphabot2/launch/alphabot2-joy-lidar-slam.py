@@ -10,7 +10,7 @@ import os
 def generate_launch_description():
     test_controller = os.path.join(get_package_share_directory('alphabot2'), 'robot_controller.yaml')
     joy_config_file = os.path.join(get_package_share_directory('alphabot2'), 'gamepad.yaml')
-    slam_config_file = os.path.join(get_package_share_directory('alphabot2'), 'mapper_params_online_async.yaml')
+    slam_config_file = os.path.join(get_package_share_directory('alphabot2'), 'mapper_params.yaml')
 
     robot_state_publisher = Node(
         package="robot_state_publisher",
