@@ -86,7 +86,6 @@ def generate_launch_description():
           'freq': 8.0
       }]
     )
-    # ros2 run rf2o_laser_odometry rf2o_laser_odometry_node --ros-args -p laser_scan_topic:=/scan -p odom_topic:=/odom -p base_frame_id:=telo -p odom_frame_id:=odom  -p freq:=2.0 --log-level debug
 
     return LaunchDescription([
         robot_state_publisher,
@@ -94,14 +93,15 @@ def generate_launch_description():
         joint_state_broadcaster,
         diff_controller,
 
-        # LiDAR publisher node
+        # lidar publisher node
         #ldlidarD500,
         sllidarC1,
         lidar_tf,
 
         rf2o,
 
-        #ros2 topic pub --once /base_pose_ground_truth nav_msgs/msg/Odometry "{header: {frame_id: 'odom'}, child_frame_id: 'telo'}"
+        # ros2 topic pub --once /base_pose_ground_truth nav_msgs/msg/Odometry "{header: {frame_id: 'odom'}, child_frame_id: 'telo'}"
+        # ros2 run rf2o_laser_odometry rf2o_laser_odometry_node --ros-args -p laser_scan_topic:=/scan -p odom_topic:=/odom -p base_frame_id:=telo -p odom_frame_id:=odom  -p freq:=2.0 --log-level debug
 
     ])
 
