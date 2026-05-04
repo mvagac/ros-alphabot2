@@ -1,8 +1,7 @@
 #ifndef DIFFDRIVE_POKUS_H
 #define DIFFDRIVE_POKUS_H
 
-#include <pigpio.h>
-#include <gpiod.h>
+#include <gpiod.h>		// libgpiod-dev
 
 #include "hardware_interface/system_interface.hpp"
 
@@ -38,6 +37,7 @@ private:
 
   int pwm0_duty_fd = -1;
   int pwm1_duty_fd = -1;
+  const long MIN_PWM = 130000;
   const long PERIOD_NS = 1000000;		// 50Hz = 20,000,000ns
 
   int hw_init();
@@ -45,10 +45,7 @@ private:
   void hw_write(char dir, int pwm, std::stringstream &ss);
 
   struct gpiod_chip* chip;
-  struct gpiod_line *ain1;
-  struct gpiod_line *ain2;
-  struct gpiod_line *bin1;
-  struct gpiod_line *bin2;
+  struct gpiod_line_request *request;
 };
 
 }  // namespace ros2_control_alphabot2

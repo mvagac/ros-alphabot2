@@ -4,8 +4,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <gpiod.h>		// libgpiod-dev
 
-#define CHIPNAME "gpiochip0"
+#define CHIPNAME "/dev/gpiochip0"
 
 // Define GPIO pins (BCM numbering)
 #define AIN1 12
@@ -21,7 +22,7 @@ namespace ros2_control_alphabot2	//ros2_control_alphabot2
 /* ***** HW ZAVISLE ************************************************************ */
 int DiffDriveAlphabot2::hw_init()
 {
-  chip = gpiod_chip_open_by_name(CHIPNAME);
+  chip = gpiod_chip_open(CHIPNAME);
   if (!chip)
   {
     std::cerr << "Failed to open GPIO chip\n";
@@ -48,15 +49,26 @@ int DiffDriveAlphabot2::hw_init()
     return 1;
 
   // pins
-  ain1 = gpiod_chip_get_line(chip, AIN1);
-  ain2 = gpiod_chip_get_line(chip, AIN2);
-  bin1 = gpiod_chip_get_line(chip, BIN1);
-  bin2 = gpiod_chip_get_line(chip, BIN2);
 
-  gpiod_line_request_output(ain1, "motor", 0);
-  gpiod_line_request_output(ain2, "motor", 0);
-  gpiod_line_request_output(bin1, "motor", 0);
-  gpiod_line_request_output(bin2, "motor", 0);
+    unsigned int offsets[] = {AIN1, AIN2, BIN1, BIN2};
+
+    gpiod_line_settings *settings = gpiod_line_settings_new();
+    gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_OUTPUT);
+    gpiod_line_settings_set_output_value(settings, GPIOD_LINE_VALUE_ACTIVE);
+
+    gpiod_line_config *config = gpiod_line_config_new();
+    gpiod_line_config_add_line_settings(config, offsets, 4, settings);
+
+    gpiod_request_config *req_cfg = gpiod_request_config_new();
+    gpiod_request_config_set_consumer(req_cfg, "motor");
+
+    request = gpiod_chip_request_lines(chip, req_cfg, config);
+
+    if (!request) {
+        std::cerr << "Failed to request lines\n";
+        return 1;
+    }
+
   return 0;
 }
 
@@ -74,24 +86,25 @@ void DiffDriveAlphabot2::hw_release()
     close(pwm1_duty_fd);
   }
 
+  gpiod_line_request_release(request);
   gpiod_chip_close(chip);
 }
 
 void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
 {
-  struct gpiod_line *in1 = NULL;
-  struct gpiod_line *in2 = NULL;
+  int in1 = 0;
+  int in2 = 0;
   int fd = -1;
   if (dir == 'L')
   {
-    in1 = ain1;
-    in2 = ain2;
+    in1 = AIN1;
+    in2 = AIN2;
     fd = pwm0_duty_fd;
   }
   if (dir == 'P')
   {
-    in1 = bin1;
-    in2 = bin2;
+    in1 = BIN1;
+    in2 = BIN2;
     fd = pwm1_duty_fd;
   }
   if (fd == -1)
@@ -104,8 +117,8 @@ void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
     // stoj
     ss << std::fixed << std::setprecision(2) << std::endl
        << "\t\tstoj " << dir << ", " << pwm;
-    gpiod_line_set_value(in1, 0);
-    gpiod_line_set_value(in2, 0);
+    gpiod_line_request_set_value(request, in1, GPIOD_LINE_VALUE_INACTIVE);
+    gpiod_line_request_set_value(request, in2, GPIOD_LINE_VALUE_INACTIVE);
     lseek(fd, 0, SEEK_SET);
     dprintf(fd, "%d", pwm);
   } else if (pwm > 0)
@@ -113,8 +126,8 @@ void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
     // dopredu
     ss << std::fixed << std::setprecision(2) << std::endl
        << "\t\tdopredu " << dir << ", " << pwm;
-    gpiod_line_set_value(in1, 0);
-    gpiod_line_set_value(in2, 1);
+    gpiod_line_request_set_value(request, in1, GPIOD_LINE_VALUE_INACTIVE);
+    gpiod_line_request_set_value(request, in2, GPIOD_LINE_VALUE_ACTIVE);
     lseek(fd, 0, SEEK_SET);
     dprintf(fd, "%d", pwm);
   } else
@@ -122,8 +135,8 @@ void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
     // dozadu
     ss << std::fixed << std::setprecision(2) << std::endl
        << "\t\tdozadu " << dir << ", " << -pwm;
-    gpiod_line_set_value(in1, 1);
-    gpiod_line_set_value(in2, 0);
+    gpiod_line_request_set_value(request, in1, GPIOD_LINE_VALUE_ACTIVE);
+    gpiod_line_request_set_value(request, in2, GPIOD_LINE_VALUE_INACTIVE);
     lseek(fd, 0, SEEK_SET);
     dprintf(fd, "%d", -pwm);
   }
@@ -271,17 +284,19 @@ hardware_interface::return_type ros2_control_alphabot2 ::DiffDriveAlphabot2::wri
     // Simulate sending commands to the hardware
     set_state(name, get_command(name));
 
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t" << "command " << get_command(name) << " for '" << name << "'!";
     double velocity_rad_s = get_command(name);  // from ROS2 controller, in rad/s
+    ss << std::fixed << std::setprecision(2) << std::endl
+       << "\t" << "command " << velocity_rad_s << " for '" << name << "'!";
     if (velocity_rad_s != 0) do_log = 1;
 
     // calculate pwm
     double max_velocity_rad_s = max_rychlost_kolesa;
     int max_pwm = PERIOD_NS;
     double clamped = std::max(-max_velocity_rad_s, std::min(velocity_rad_s, max_velocity_rad_s));
-    double pwm_d = (clamped / max_velocity_rad_s) * max_pwm;
+    double pwm_d = (clamped / max_velocity_rad_s) * (max_pwm - MIN_PWM);
     int pwm = static_cast<int>(std::round(pwm_d));
+    if (pwm > 0) pwm += MIN_PWM;
+    if (pwm < 0) pwm -= MIN_PWM;
 
     if (name == lave_koleso_nazov + "/velocity") {
       hw_write('L', pwm, ss);

@@ -44,7 +44,7 @@ ament_target_dependencies(
 )
 
 target_link_libraries(alphabot2_diffdrive PRIVATE
-  pigpio gpiod
+  gpiod
 )
 
 pluginlib_export_plugin_description_file(hardware_interface robot_hardware.xml)
