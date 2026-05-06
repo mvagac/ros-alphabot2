@@ -95,17 +95,18 @@ void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
   int in1 = 0;
   int in2 = 0;
   int fd = -1;
+  ss << std::fixed << std::setprecision(2) << std::endl << "\t\t" << dir;
   if (dir == 'L')
   {
     in1 = AIN1;
     in2 = AIN2;
-    fd = pwm0_duty_fd;
+    fd = pwm1_duty_fd;
   }
   if (dir == 'P')
   {
     in1 = BIN1;
     in2 = BIN2;
-    fd = pwm1_duty_fd;
+    fd = pwm0_duty_fd;
   }
   if (fd == -1)
   {
@@ -115,8 +116,7 @@ void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
   if (pwm == 0)
   {
     // stoj
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t\tstoj " << dir << ", " << pwm;
+    ss << " stoj (in1[" << in1 << "]=0, in2[" << in2 << "]=0)" << ", " << pwm;
     gpiod_line_request_set_value(request, in1, GPIOD_LINE_VALUE_INACTIVE);
     gpiod_line_request_set_value(request, in2, GPIOD_LINE_VALUE_INACTIVE);
     lseek(fd, 0, SEEK_SET);
@@ -124,8 +124,7 @@ void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
   } else if (pwm > 0)
   {
     // dopredu
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t\tdopredu " << dir << ", " << pwm;
+    ss << " dopredu (in1[" << in1 << "]=0, in2[" << in2 << "]=1)" << ", " << pwm;
     gpiod_line_request_set_value(request, in1, GPIOD_LINE_VALUE_INACTIVE);
     gpiod_line_request_set_value(request, in2, GPIOD_LINE_VALUE_ACTIVE);
     lseek(fd, 0, SEEK_SET);
@@ -133,8 +132,7 @@ void DiffDriveAlphabot2::hw_write(char dir, int pwm, std::stringstream &ss)
   } else
   {
     // dozadu
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t\tdozadu " << dir << ", " << -pwm;
+    ss << " dozadu (in1[" << in1 << "]=1, in2[" << in2 << "]=0)" << ", " << -pwm;
     gpiod_line_request_set_value(request, in1, GPIOD_LINE_VALUE_ACTIVE);
     gpiod_line_request_set_value(request, in2, GPIOD_LINE_VALUE_INACTIVE);
     lseek(fd, 0, SEEK_SET);
