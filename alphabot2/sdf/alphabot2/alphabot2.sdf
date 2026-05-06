@@ -111,7 +111,7 @@
             <parent>telo</parent>
             <child>prave_koleso</child>
             <axis>
-                <xyz expressed_in='__model__'>0 1 0</xyz>
+                <xyz expressed_in='__model__'>0 -1 0</xyz>
                 <limit>
                     <lower>-1.79769e+308</lower>    <!--negative infinity-->
                     <upper>1.79769e+308</upper>     <!--positive infinity-->
@@ -190,16 +190,16 @@
 
             <joint name="lave_koleso_zaves">
                 <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
+                    <param name="min">-40</param>
+                    <param name="max">40</param>
                 </command_interface>
                 <state_interface name="position"/>
                 <state_interface name="velocity"/>
             </joint>
             <joint name="prave_koleso_zaves">
                 <command_interface name="velocity">
-                    <param name="min">-10</param>
-                    <param name="max">10</param>
+                    <param name="min">-40</param>
+                    <param name="max">40</param>
                 </command_interface>
                 <state_interface name="position"/>
                 <state_interface name="velocity"/>
