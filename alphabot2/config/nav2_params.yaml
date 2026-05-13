@@ -8,16 +8,57 @@ amcl:
 global_costmap:
   global_costmap:
     ros__parameters:
+      update_frequency: 1.0
+      publish_frequency: 1.0
       robot_base_frame: "telo"
       global_frame: "map"
       robot_radius: 0.06
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+      static_layer:
+        plugin: "nav2_costmap_2d::StaticLayer"
+        map_subscribe_transient_local: True
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 0.1
+        cost_scaling_factor: 3.0
 
 local_costmap:
   local_costmap:
     ros__parameters:
+      update_frequency: 5.0
+      publish_frequency: 2.0
       robot_base_frame: "telo"
       global_frame: "odom"
       robot_radius: 0.06
+      rolling_window: True
+      width: 3
+      height: 3
+      resolution: 0.05
+      plugins: ["obstacle_layer", "inflation_layer"]
+      obstacle_layer:
+        plugin: "nav2_costmap_2d::ObstacleLayer"
+        enabled: True
+        observation_sources: scan
+        scan:
+          topic: /scan
+          max_obstacle_height: 2.0
+          clearing: True
+          marking: True
+          data_type: "LaserScan"
+      inflation_layer:
+        plugin: "nav2_costmap_2d::InflationLayer"
+        inflation_radius: 0.1
+        cost_scaling_factor: 3.0
 
 bt_navigator:
   ros__parameters:
@@ -25,18 +66,21 @@ bt_navigator:
     global_frame: "map"
     robot_base_frame: "telo"
     odom_topic: "odom"
+    default_nav_to_pose_bt_xml: "/opt/ros/kilted/share/nav2_bt_navigator/behavior_trees/navigate_to_pose_w_replanning_and_recovery.xml"
 
 controller_server:
   ros__parameters:
     use_sim_time: False
+    #topic_remap: "/cmd_vel:=/diff_controller_alphabot2/cmd_vel"
     controller_plugins: ["FollowPath"]
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
       # Alphabot2 is small; keep these limits low
-      min_vel_x: 0.0
-      max_vel_x: 0.3 
-      max_vel_theta: 1.0
+      min_vel_x: 0.01
+      max_vel_x: 15.0
+      min_speed_theta: 0.01
+      max_vel_theta: 15.0
       # critics
       critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
       BaseObstacle.scale: 0.02
@@ -56,4 +100,12 @@ planner_server:
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner::NavfnPlanner"
+
+behavior_server:
+  ros__parameters:
+    use_sim_time: False
+    global_frame: map
+    local_frame: odom
+    robot_base_frame: telo
+    transform_tolerance: 0.1
 

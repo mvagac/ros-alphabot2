@@ -83,7 +83,7 @@ def generate_launch_description():
           'publish_tf': True,
           'base_frame_id': 'telo',
           'odom_frame_id': 'odom',
-          #'init_pose_from_topic': '',
+          'init_pose_from_topic': '',
           'freq': 8.0
       }]
     )
@@ -110,7 +110,7 @@ def generate_launch_description():
 
         # joystick
         joy_node,
-        teleop_node
+        teleop_node,
 
 
         # lidar publisher node
