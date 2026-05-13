@@ -1,6 +1,6 @@
 controller_manager:
   ros__parameters:
-    update_rate: 50  # Hz
+    update_rate: 20  # Hz
 
     diff_controller_alphabot2:
       type: diff_drive_controller/DiffDriveController
@@ -10,7 +10,7 @@ controller_manager:
 
 diff_controller_alphabot2:
   ros__parameters:
-    update_rate: 50  # Hz
+    update_rate: 20  # Hz
 
     base_frame_id: telo
 

@@ -68,7 +68,7 @@ def generate_launch_description():
     lidar_tf = Node(
       package='tf2_ros',
       executable='static_transform_publisher',
-      name='base_link_to_base_laser_ld06',
+      name='telo_to_base_laser_ld06',
       arguments=['0','0','0.05','0','0','0','telo','base_laser']
     )
 

@@ -9,7 +9,7 @@ setup(
     data_files=[
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml', 'config/robot_controller.yaml', 'config/gamepad.yaml', 'config/mapper_params.yaml']),
+        ('share/' + package_name, ['package.xml', 'config/robot_controller.yaml', 'config/gamepad.yaml', 'config/mapper_params.yaml', 'config/nav2_params.yaml', 'config/kancel_map.yaml', 'config/kancel_map.pgm']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

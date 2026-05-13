@@ -1,0 +1,59 @@
+amcl:
+  ros__parameters:
+    use_sim_time: False
+    base_frame_id: "telo"
+    odom_frame_id: "odom"
+    scan_topic: "scan"
+
+global_costmap:
+  global_costmap:
+    ros__parameters:
+      robot_base_frame: "telo"
+      global_frame: "map"
+      robot_radius: 0.06
+
+local_costmap:
+  local_costmap:
+    ros__parameters:
+      robot_base_frame: "telo"
+      global_frame: "odom"
+      robot_radius: 0.06
+
+bt_navigator:
+  ros__parameters:
+    use_sim_time: False
+    global_frame: "map"
+    robot_base_frame: "telo"
+    odom_topic: "odom"
+
+controller_server:
+  ros__parameters:
+    use_sim_time: False
+    controller_plugins: ["FollowPath"]
+    FollowPath:
+      plugin: "dwb_core::DWBLocalPlanner"
+      debug_trajectory_details: True
+      # Alphabot2 is small; keep these limits low
+      min_vel_x: 0.0
+      max_vel_x: 0.3 
+      max_vel_theta: 1.0
+      # critics
+      critics: ["RotateToGoal", "Oscillation", "BaseObstacle", "GoalAlign", "PathAlign", "PathDist", "GoalDist"]
+      BaseObstacle.scale: 0.02
+      PathAlign.scale: 32.0
+      PathAlign.forward_point_distance: 0.1
+      GoalAlign.scale: 24.0
+      GoalAlign.forward_point_distance: 0.1
+      PathDist.scale: 32.0
+      GoalDist.scale: 24.0
+      RotateToGoal.scale: 32.0
+      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.lookahead_time: -1.0
+
+planner_server:
+  ros__parameters:
+    use_sim_time: False
+    planner_plugins: ["GridBased"]
+    GridBased:
+      plugin: "nav2_navfn_planner::NavfnPlanner"
+
