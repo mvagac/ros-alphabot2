@@ -36,6 +36,7 @@ int DiffDriveAlphabot2::hw_init()
       if (access(path.c_str(), F_OK) != 0) {				// export if not already present
           std::ofstream("/sys/class/pwm/pwmchip" + id + "/export") << "0";	// creates pwm0 subfolder
       }
+      usleep(500000);							// wait 0.5s
       std::ofstream(path + "/enable") << "0";				// disable to allow period changes
       std::ofstream(path + "/period") << std::to_string(PERIOD_NS);	// set period (>duty_cycle)
       std::ofstream(path + "/duty_cycle") << "0";			// set initial duty cycle
@@ -45,29 +46,31 @@ int DiffDriveAlphabot2::hw_init()
   pwm0_duty_fd = setup_pwm("0");
   pwm1_duty_fd = setup_pwm("1");
 
-  if (pwm0_duty_fd < 0 || pwm1_duty_fd < 0)
+  if (pwm0_duty_fd < 0 || pwm1_duty_fd < 0) {
+    std::cerr << "Failed to setup PWM\n";
     return 1;
+  }
 
   // pins
 
-    unsigned int offsets[] = {AIN1, AIN2, BIN1, BIN2};
+  unsigned int offsets[] = {AIN1, AIN2, BIN1, BIN2};
 
-    gpiod_line_settings *settings = gpiod_line_settings_new();
-    gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_OUTPUT);
-    gpiod_line_settings_set_output_value(settings, GPIOD_LINE_VALUE_ACTIVE);
+  gpiod_line_settings *settings = gpiod_line_settings_new();
+  gpiod_line_settings_set_direction(settings, GPIOD_LINE_DIRECTION_OUTPUT);
+  gpiod_line_settings_set_output_value(settings, GPIOD_LINE_VALUE_ACTIVE);
 
-    gpiod_line_config *config = gpiod_line_config_new();
-    gpiod_line_config_add_line_settings(config, offsets, 4, settings);
+  gpiod_line_config *config = gpiod_line_config_new();
+  gpiod_line_config_add_line_settings(config, offsets, 4, settings);
 
-    gpiod_request_config *req_cfg = gpiod_request_config_new();
-    gpiod_request_config_set_consumer(req_cfg, "motor");
+  gpiod_request_config *req_cfg = gpiod_request_config_new();
+  gpiod_request_config_set_consumer(req_cfg, "motor");
 
-    request = gpiod_chip_request_lines(chip, req_cfg, config);
+  request = gpiod_chip_request_lines(chip, req_cfg, config);
 
-    if (!request) {
-        std::cerr << "Failed to request lines\n";
-        return 1;
-    }
+  if (!request) {
+      std::cerr << "Failed to request lines\n";
+      return 1;
+  }
 
   return 0;
 }
