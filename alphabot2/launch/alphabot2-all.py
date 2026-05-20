@@ -5,6 +5,9 @@ import os
 
 def generate_launch_description():
     controller_config_file = os.path.join(get_package_share_directory('alphabot2'), 'robot_controller.yaml')
+    joy_config_file = os.path.join(get_package_share_directory('alphabot2'), 'gamepad.yaml')
+    map_file = os.path.join(get_package_share_directory('alphabot2'), 'kancel_map.yaml')
+    nav2_config_file = os.path.join(get_package_share_directory('alphabot2'), 'nav2_params.yaml')
 
     robot_state_publisher = Node(
         package="robot_state_publisher",
@@ -31,6 +34,8 @@ def generate_launch_description():
         arguments=["diff_controller_alphabot2"],
     )
     # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/diff_controller_alphabot2/cmd_vel
+
+    ### LIDAR #############################################
 
     ldlidarD500 = Node(
         package='ldlidar_stl_ros2',
@@ -87,11 +92,91 @@ def generate_launch_description():
       }]
     )
 
+    ### JOYSTICK #############################################
+
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        parameters=[{'dev': '/dev/input/js0', 'deadzone': 0.1}]
+    )
+    teleop_node = Node(
+        package='teleop_twist_joy',
+        executable='teleop_node',
+        name='teleop_twist_joy_node',
+        parameters=[joy_config_file],
+        remappings=[('/cmd_vel', '/diff_controller_alphabot2/cmd_vel')]
+    )
+
+    ### NAVIGATION #############################################
+
+    map_server = Node(
+        package='nav2_map_server',
+        executable='map_server',
+        name='map_server',
+        output='screen',
+        parameters=[{'yaml_filename': map_file}, {'use_sim_time': False}]
+    )
+    amcl = Node(
+        package='nav2_amcl',
+        executable='amcl',
+        name='amcl',
+        output='screen',
+        parameters=[nav2_config_file, {'use_sim_time': False}]
+    )
+    planner_server = Node(
+        package='nav2_planner',
+        executable='planner_server',
+        name='planner_server',
+        output='screen',
+        parameters=[nav2_config_file]
+    )
+    controller_server = Node(
+        package='nav2_controller',
+        executable='controller_server',
+        name='controller_server',
+        output='screen',
+        parameters=[nav2_config_file]
+    )
+    nav2_bt_nav = Node(
+        package='nav2_bt_navigator',
+        executable='bt_navigator',
+        name='bt_navigator',
+        output='screen',
+        parameters=[nav2_config_file]
+    )
+    behavior_server = Node(
+        package='nav2_behaviors',
+        executable='behavior_server',
+        name='behavior_server',
+        output='screen',
+        parameters=[nav2_config_file]
+    )
+    bt_navigator = Node(
+        package='nav2_lifecycle_manager',
+        executable='lifecycle_manager',
+        name='lifecycle_manager_navigation',
+        output='screen',
+        parameters=[{'use_sim_time': False},
+                    {'autostart': True},
+                    {'bond_timeout': 60.0},
+                    {'node_names': ['map_server', 
+                                    'amcl', 
+                                    'planner_server', 
+                                    'controller_server', 
+                                    'behavior_server', 
+                                    'bt_navigator']}]
+    )
+
     return LaunchDescription([
         robot_state_publisher,
         control_node,
         joint_state_broadcaster,
         diff_controller,
+
+        # joystick
+        joy_node,
+        #teleop_node,
 
         # lidar publisher node
         #ldlidarD500,
@@ -99,9 +184,15 @@ def generate_launch_description():
         lidar_tf,
 
         rf2o,
-
         # ros2 topic pub --once /base_pose_ground_truth nav_msgs/msg/Odometry "{header: {frame_id: 'odom'}, child_frame_id: 'telo'}"
-        # ros2 run rf2o_laser_odometry rf2o_laser_odometry_node --ros-args -p laser_scan_topic:=/scan -p odom_topic:=/odom -p base_frame_id:=telo -p odom_frame_id:=odom  -p freq:=2.0 --log-level debug
+        # ros2 run nav2_map_server map_saver_cli -f pokus_map
 
+        map_server,
+        amcl,
+        planner_server,
+        controller_server,
+        nav2_bt_nav,
+        behavior_server,
+        bt_navigator,
     ])
 

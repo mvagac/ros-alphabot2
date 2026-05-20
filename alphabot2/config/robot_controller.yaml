@@ -27,6 +27,8 @@ diff_controller_alphabot2:
                               # pri zmene rebuildnut tento balicek!
                               # kontrola: ros2 param get /diff_controller_alphabot2 enable_odom_tf
 
+    #cmd_vel_timeout: 5.0
+
     linear.x.max_velocity: 15.0
     linear.x.min_velocity: -15.0
     linear.x.max_acceleration: .NAN
