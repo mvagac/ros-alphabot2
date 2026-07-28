@@ -84,13 +84,13 @@ controller_server:
       min_speed_xy: 0.05
       max_speed_xy: 0.85
       min_speed_theta: 0.4
-      max_vel_theta: 2.0
+      max_vel_theta: 1.0
       acc_lim_x: 0.3
       acc_lim_theta: 1.0
       vx_samples: 30       # Increase from default
       vy_samples: 1       # Must be 1 for differential drive (no lateral movement)
       vtheta_samples: 50   # Increase from default
-      sim_time: 1.5        # Shorter simulation time for tight spaces
+      sim_time: 1.0        # Shorter simulation time for tight spaces
       #sim_granularity: 0.025
       #use_grid_path: true
       # critics
