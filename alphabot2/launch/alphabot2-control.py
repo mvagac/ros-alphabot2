@@ -70,7 +70,7 @@ def generate_launch_description():
       package='tf2_ros',
       executable='static_transform_publisher',
       name='telo_to_base_laser_ld06',
-      arguments=['0','0','0.05','0','0','0','telo','base_laser']
+      arguments=['0','0','0.055','0','0','0','telo','base_laser']
     )
 
     rf2o = Node(

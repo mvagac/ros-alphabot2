@@ -7,6 +7,6 @@ teleop_twist_joy_node:
     axis_angular:
       yaw: 0          # Left stick Left/Right (index to axes of /joy topic)
     scale_linear:
-      x: 0.3          # Max speed in m/s
+      x: 0.2          # Max speed in m/s (max_vel_x in nav2)
     scale_angular:
-      yaw: 2.0        # Max turn speed in rad/s
+      yaw: 0.6        # Max turn speed in rad/s (max_vel_theta in nav2)
