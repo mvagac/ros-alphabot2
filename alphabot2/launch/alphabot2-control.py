@@ -131,13 +131,22 @@ def generate_launch_description():
 
     ### TEST #############################################
 
-    movement_tester = Node(
+    controller_benchmark = Node(
         package="alphabot2",
-        executable="alphabot2_node"
+        executable="controller_benchmark_node"
     )
-    delayed_movement_tester = TimerAction(
+    delayed_controller_benchmark = TimerAction(
         period=35.0,
-        actions=[movement_tester]
+        actions=[controller_benchmark]
+    )
+
+    nav2_benchmark = Node(
+        package="alphabot2",
+        executable="nav2_benchmark_node"
+    )
+    delayed_nav2_benchmark = TimerAction(
+        period=25.0,
+        actions=[nav2_benchmark]
     )
 
     auto_shutdown = TimerAction(
@@ -164,8 +173,9 @@ def generate_launch_description():
 
         #joy_node,
         #teleop_node,
-        #delayed_movement_tester,
+        #delayed_controller_benchmark,
         delayed_nav2_launch,
+        delayed_nav2_benchmark,
         auto_shutdown
     ])
 

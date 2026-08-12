@@ -5,14 +5,14 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped
 
-class MovementTester(Node):
+class ControllerBenchmarkNode(Node):
 
     def __init__(self):
-        super().__init__('movement_tester')
+        super().__init__('controller_benchmark')
         self.pub = self.create_publisher(TwistStamped, '/diff_controller_alphabot2/cmd_vel', 10)
         self.timer = self.create_timer(2.0, self.timer_callback)
         self.state = 0
-        self.get_logger().info('MovementTester node has been started.')
+        self.get_logger().info('ControllerBenchmarkNode node has been started.')
         #self.move(0.5, 0.0)
 
     def move(self, x, th):
@@ -62,9 +62,9 @@ class MovementTester(Node):
 def main(args=None):
     try:
         with rclpy.init(args=args):
-            movement_tester = MovementTester()
+            controller_benchmark = ControllerBenchmarkNode()
 
-            rclpy.spin(movement_tester)
+            rclpy.spin(controller_benchmark)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
 

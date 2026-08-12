@@ -24,7 +24,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'alphabot2_node = alphabot2.alphabot2_node:main'
+            'controller_benchmark_node = alphabot2.controller_benchmark_node:main',
+            'nav2_benchmark_node = alphabot2.nav2_benchmark_node:main'
         ],
     },
 )
