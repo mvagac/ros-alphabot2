@@ -1,6 +1,7 @@
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import IncludeLaunchDescription, EmitEvent, TimerAction
+from launch.events import Shutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
@@ -121,6 +122,15 @@ def generate_launch_description():
     )
 
 
+    ### TEST #############################################
+
+    auto_shutdown = TimerAction(
+        period=60.0,
+        actions=[
+            EmitEvent(event=Shutdown(reason='Benchmark evaluation completed.'))
+        ]
+    )
+
     return LaunchDescription([
         robot_state_publisher,
         control_node,
@@ -142,6 +152,8 @@ def generate_launch_description():
 
         mapper,
         # ros2 run nav2_map_server map_saver_cli -f pokus_map
+
+        auto_shutdown
 
     ])
 

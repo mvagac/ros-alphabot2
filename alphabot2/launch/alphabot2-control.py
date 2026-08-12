@@ -1,6 +1,10 @@
 from ament_index_python import get_package_share_directory
 from launch import LaunchDescription
 from launch_ros.actions import Node
+from launch import LaunchDescription
+from launch.actions import IncludeLaunchDescription, EmitEvent, TimerAction
+from launch.events import Shutdown
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 import os
 
 def generate_launch_description():
@@ -31,6 +35,7 @@ def generate_launch_description():
         arguments=["diff_controller_alphabot2"],
     )
     # ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -r cmd_vel:=/diff_controller_alphabot2/cmd_vel
+
 
     ### LIDAR #############################################
 
@@ -90,6 +95,58 @@ def generate_launch_description():
     )
 
 
+    ### JOY #############################################
+
+    joy_config_file = os.path.join(get_package_share_directory('alphabot2'), 'gamepad.yaml')
+
+    joy_node = Node(
+        package='joy',
+        executable='joy_node',
+        name='joy_node',
+        parameters=[{'dev': '/dev/input/js0', 'deadzone': 0.1}]
+    )
+    teleop_node = Node(
+        package='teleop_twist_joy',
+        executable='teleop_node',
+        name='teleop_twist_joy_node',
+        parameters=[joy_config_file],
+        remappings=[('/cmd_vel', '/diff_controller_alphabot2/cmd_vel')]
+    )
+
+
+    ### NAV2 #############################################
+
+    nav2_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('alphabot2'), 'launch', 'alphabot2-nav2.py')
+        ),
+        launch_arguments={'use_sim_time': 'false'}.items()
+    )
+
+    delayed_nav2_launch = TimerAction(
+        period=15.0,
+        actions=[nav2_launch]
+    )
+
+
+    ### TEST #############################################
+
+    movement_tester = Node(
+        package="alphabot2",
+        executable="alphabot2_node"
+    )
+    delayed_movement_tester = TimerAction(
+        period=35.0,
+        actions=[movement_tester]
+    )
+
+    auto_shutdown = TimerAction(
+        period=120.0,
+        actions=[
+            EmitEvent(event=Shutdown(reason='Benchmark evaluation completed.'))
+        ]
+    )
+
     return LaunchDescription([
         robot_state_publisher,
         control_node,
@@ -104,5 +161,11 @@ def generate_launch_description():
         rf2o,
         # ros2 topic pub --once /base_pose_ground_truth nav_msgs/msg/Odometry "{header: {frame_id: 'odom'}, child_frame_id: 'telo'}"
         # ros2 run rf2o_laser_odometry rf2o_laser_odometry_node --ros-args -p laser_scan_topic:=/scan -p odom_topic:=/odom -p base_frame_id:=telo -p odom_frame_id:=odom  -p freq:=2.0 --log-level debug
+
+        #joy_node,
+        #teleop_node,
+        #delayed_movement_tester,
+        delayed_nav2_launch,
+        auto_shutdown
     ])
 

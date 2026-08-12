@@ -1,3 +1,5 @@
+import os
+from glob import glob
 from setuptools import find_packages, setup
 
 package_name = 'alphabot2'
@@ -7,9 +9,11 @@ setup(
     version='0.0.0',
     packages=find_packages(exclude=['test']),
     data_files=[
-        ('share/ament_index/resource_index/packages',
-            ['resource/' + package_name]),
-        ('share/' + package_name, ['package.xml', 'config/robot_controller.yaml', 'config/gamepad.yaml', 'config/mapper_params.yaml', 'config/nav2_params.yaml', 'maps/kancel_map.yaml', 'maps/kancel_map.pgm', 'maps/labak_map.yaml', 'maps/labak_map.pgm', 'maps/kancel_map-big.yaml', 'maps/kancel_map-big.pgm']),
+        ('share/ament_index/resource_index/packages', ['resource/' + package_name]),
+        #(os.path.join('share', package_name, 'config'), glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
+        (os.path.join('share', package_name, 'maps'), glob('maps/*')),
+        ('share/' + package_name, ['package.xml', 'config/robot_controller.yaml', 'config/gamepad.yaml', 'config/mapper_params.yaml', 'config/nav2_params.yaml']),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

@@ -8,7 +8,7 @@ from launch_ros.substitutions import FindPackageShare
 import os
 
 def generate_launch_description():
-    map_file = os.path.join(get_package_share_directory('alphabot2'), 'kancel_map.yaml')
+    map_file = os.path.join(get_package_share_directory('alphabot2'), 'maps', 'kancel_map.yaml')
     nav2_config_file = os.path.join(get_package_share_directory('alphabot2'), 'nav2_params.yaml')
 
     map_server = Node(
