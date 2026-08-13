@@ -32,9 +32,14 @@ class Nav2BenchmarkNode(Node):
         self.output_csv = 'graph-nav2_metrics.csv'
         self.goals_list: List[Tuple[float, float, float]] = [
             # X, Y, Yaw
+            # 1) rviz: Frame:map, Position(0.170018, 0.0716636, 0), Orientation(0, 0, -0.217988, 0.975951) = Angle: -0.439505
+            # 2) rviz: Frame:map, Position(0.254884, 0.0923271, 0), Orientation(0, 0, -0.241577, 0.970382) = Angle: -0.487982
+
+
             #(0.26, 0.23, 0.0),
-            (0.22, 0.15, 0.0),
-            (0.24, -0.1, -0.6),
+            (0.25, 0.07, -0.3),
+            #(-0.16, 0.095, -0.05)
+            #(0.20, -0.1, -0.6),
 
             # Setting goal pose: Frame:map, Position(0.215001, 0.146956, 0), Orientation(0, 0, 0.000110523, 1) = Angle: 0.000221047
             #Setting goal pose: Frame:map, Position(0.242755, -0.1002, 0), Orientation(0, 0, -0.618507, 0.785779) = Angle: -1.33368
@@ -56,10 +61,12 @@ class Nav2BenchmarkNode(Node):
         ]
         self.current_path_length = 0.0
 
-        self._set_initial_pose(-0.216, 0.065, -0.013)
-        time.sleep(3.0)
+        self._set_initial_pose(-0.16, 0.095, -0.05)   # -0.168 0.138 0.040 ;  -0.164 0.043 0.027
+        time.sleep(1.0)
+        self._set_initial_pose(-0.16, 0.095, -0.05)   # -0.168 0.138 0.040 ;  -0.164 0.043 0.027
+        self.get_logger().info('Nav2BenchmarkNode node has been started, waiting 10 s..')
+        time.sleep(10.0)
 
-        self.get_logger().info('Nav2BenchmarkNode node has been started.')
 
     def _set_initial_pose(self, x: float, y: float, yaw: float):
         # wait until there is at least one subscriber (=AMCL)
@@ -209,7 +216,7 @@ class Nav2BenchmarkNode(Node):
 
         # save to csv
         keys = metrics_data[0].keys()
-        with open(self.output_csv, 'w', newline='') as output_file:
+        with open(self.output_csv, 'a', newline='') as output_file:
             dict_writer = csv.DictWriter(output_file, fieldnames=keys)
             dict_writer.writeheader()
             dict_writer.writerows(metrics_data)

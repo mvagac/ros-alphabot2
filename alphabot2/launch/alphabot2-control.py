@@ -150,7 +150,7 @@ def generate_launch_description():
     )
 
     auto_shutdown = TimerAction(
-        period=120.0,
+        period=60.0,
         actions=[
             EmitEvent(event=Shutdown(reason='Benchmark evaluation completed.'))
         ]
