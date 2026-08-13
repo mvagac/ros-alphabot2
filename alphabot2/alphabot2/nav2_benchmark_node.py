@@ -8,33 +8,51 @@ from typing import List, Tuple
 
 import rclpy
 from action_msgs.msg import GoalStatus
-from geometry_msgs.msg import PoseStamped
-from geometry_msgs.msg import PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_msgs.action import NavigateToPose
 from nav_msgs.msg import Path
 from rclpy.action import ActionClient
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
-
+from rclpy.qos import DurabilityPolicy, HistoryPolicy, QoSProfile, ReliabilityPolicy
+from rclpy.time import Time
 
 class Nav2BenchmarkNode(Node):
     def __init__(self):
         super().__init__('nav2_benchmark_node')
 
         # publisher to send initial pose
-        self._pose_pub = self.create_publisher(PoseWithCovarianceStamped, '/initialpose', 10)
+        qos_profile = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, durability=DurabilityPolicy.TRANSIENT_LOCAL, history=HistoryPolicy.KEEP_LAST, depth=1)
+        self._pose_pub = self.create_publisher(PoseWithCovarianceStamped, '/initialpose', qos_profile)
         # subscriber to receive global plan computed by Nav2
         self._plan_sub = self.create_subscription(Path, '/plan', self._plan_callback, 10)
         # action client for Nav2
         self._action_client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
 
-        self.output_csv = 'nav2_performance_metrics.csv'
+        self.output_csv = 'graph-nav2_metrics.csv'
         self.goals_list: List[Tuple[float, float, float]] = [
             # X, Y, Yaw
             #(0.26, 0.23, 0.0),
             (0.22, 0.15, 0.0),
             (0.24, -0.1, -0.6),
 
+            # Setting goal pose: Frame:map, Position(0.215001, 0.146956, 0), Orientation(0, 0, 0.000110523, 1) = Angle: 0.000221047
+            #Setting goal pose: Frame:map, Position(0.242755, -0.1002, 0), Orientation(0, 0, -0.618507, 0.785779) = Angle: -1.33368
+            # Begin navigating from current location (-0.15, 0.14) to (0.22, 0.15)
+
+
+
+            #TODO start? ng pose (1785354373.684680): -0.164 0.204 0.103
+            #               : -0.169 0.194 -0.046
+            #               -0.153 0.201 0.010
+            #               Position(-0.153309, 0.200576, 0), Orientation(0, 0, 0.00503605, 0.999987) = Angle: 0.0100721
+            #               TODO toto: -0.216 0.065 -0.013
+            #(1.0, 0.5, 0.0),    # (-0.17, 0.23) to (0.26, 0.23)
+                                # Setting goal pose: Frame:map, Position(0.314266, 0.154956, 0), Orientation(0, 0, -0.406778, 0.913527) = Angle: -0.837849
+                                # Begin navigating from current location (-0.17, 0.23) to (0.31, 0.15)
+            #(2.0, 1.5, 1.57),
+            #(0.5, 2.0, 3.14),
+            #(0.0, 0.0, 0.0)
         ]
         self.current_path_length = 0.0
 
@@ -44,9 +62,20 @@ class Nav2BenchmarkNode(Node):
         self.get_logger().info('Nav2BenchmarkNode node has been started.')
 
     def _set_initial_pose(self, x: float, y: float, yaw: float):
+        # wait until there is at least one subscriber (=AMCL)
+        timeout_sec = 10
+        start_time = time.time()
+        while self._pose_pub.get_subscription_count() == 0:
+            time.sleep(0.1)
+            if time.time() - start_time > timeout_sec:
+                self.get_logger().error('Timed out waiting for /initialpose subscribers!')
+                return False
+
+        # prepare message
         msg = PoseWithCovarianceStamped()
         msg.header.frame_id = 'map'
         msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.stamp = Time().to_msg()
 
         msg.pose.pose.position.x = x
         msg.pose.pose.position.y = y
@@ -59,6 +88,7 @@ class Nav2BenchmarkNode(Node):
         msg.pose.covariance[7] = 0.25  # Y variance
         msg.pose.covariance[35] = 0.068  # Yaw variance
 
+        # send the message
         self.get_logger().info(
             f'Publishing initial pose: x={x}, y={y}, yaw={yaw}'
         )

@@ -124,7 +124,7 @@ def generate_launch_description():
     )
 
     delayed_nav2_launch = TimerAction(
-        period=15.0,
+        period=10.0,
         actions=[nav2_launch]
     )
 
@@ -145,7 +145,7 @@ def generate_launch_description():
         executable="nav2_benchmark_node"
     )
     delayed_nav2_benchmark = TimerAction(
-        period=25.0,
+        period=17.0,
         actions=[nav2_benchmark]
     )
 
