@@ -24,6 +24,9 @@ class Nav2BenchmarkNode(Node):
         # publisher to send initial pose
         qos_profile = QoSProfile(reliability=ReliabilityPolicy.RELIABLE, durability=DurabilityPolicy.TRANSIENT_LOCAL, history=HistoryPolicy.KEEP_LAST, depth=1)
         self._pose_pub = self.create_publisher(PoseWithCovarianceStamped, '/initialpose', qos_profile)
+        self._set_initial_pose(-0.16, 0.095, -0.05)   # -0.168 0.138 0.040 ;  -0.164 0.043 0.027
+        time.sleep(1.0)
+        self._set_initial_pose(-0.16, 0.095, -0.05)   # -0.168 0.138 0.040 ;  -0.164 0.043 0.027
         # subscriber to receive global plan computed by Nav2
         self._plan_sub = self.create_subscription(Path, '/plan', self._plan_callback, 10)
         # action client for Nav2
@@ -61,9 +64,6 @@ class Nav2BenchmarkNode(Node):
         ]
         self.current_path_length = 0.0
 
-        self._set_initial_pose(-0.16, 0.095, -0.05)   # -0.168 0.138 0.040 ;  -0.164 0.043 0.027
-        time.sleep(1.0)
-        self._set_initial_pose(-0.16, 0.095, -0.05)   # -0.168 0.138 0.040 ;  -0.164 0.043 0.027
         self.get_logger().info('Nav2BenchmarkNode node has been started, waiting 10 s..')
         time.sleep(10.0)
 
